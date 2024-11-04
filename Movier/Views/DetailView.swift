@@ -7,9 +7,38 @@
 
 import Foundation
 import UIKit
+import WebKit
 
 class DetailView : UIView {
     
+    lazy var webView : WKWebView = {
+        let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true
+        config.mediaTypesRequiringUserActionForPlayback = [.all]
+        config.preferences.javaScriptCanOpenWindowsAutomatically = true
+        
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        webView.contentMode = .scaleToFill
+        webView.clipsToBounds = true
+        webView.backgroundColor = .systemBackground
+        webView.layer.cornerRadius = 20
+        return webView
+    }()
+    
+    lazy var webView2 : WKWebView = {
+        let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true
+        config.mediaTypesRequiringUserActionForPlayback = [.all]
+        config.preferences.javaScriptCanOpenWindowsAutomatically = true
+        
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.backgroundColor = .systemBackground
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        webView.clipsToBounds = true
+        return webView
+    }()
+  
     
     let scrollView : UIScrollView = {
         let scrollView = UIScrollView()
@@ -25,21 +54,15 @@ class DetailView : UIView {
         return view
     }()
     
-    let playImageButton : UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "play.circle")?.withTintColor(.white, renderingMode: .alwaysOriginal)
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.alpha = 0.7
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
     
-    let movieImageView : UIImageView = {
+    lazy var movieImageView : UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.clipsToBounds = true
+        imageView.isHidden = true
         imageView.layer.cornerRadius = 20
         imageView.contentMode = .scaleToFill
+        imageView.isUserInteractionEnabled = true
         return imageView
     }()
     
@@ -51,6 +74,28 @@ class DetailView : UIView {
         label.numberOfLines = 0
         return label
     }()
+    
+    let serverErrorLabel : UILabel = {
+       let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 15,weight: .regular)
+        label.numberOfLines = 0
+        label.text = "Server error in playing video."
+        label.textAlignment = .center
+        label.textColor = .systemRed
+        label.isHidden = true
+        return label
+    }()
+    
+    let downloadButton : UIButton = {
+        let button = UIButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setBackgroundImage(UIImage(systemName: "arrow.down.app"), for: .normal)
+        button.tintColor = .systemRed
+        button.clipsToBounds = true
+        return button
+    }()
+    
     
     let voteStackView : UIStackView = {
         let stackView = UIStackView()
@@ -213,6 +258,15 @@ class DetailView : UIView {
         return label
     }()
     
+    let cardView : UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.clipsToBounds = false
+        view.layer.shadowOffset = CGSize(width: 10, height: 10)
+        view.layer.shadowRadius = 10
+        view.layer.shadowOpacity = 1
+        return view
+    }()
     
     let tableHeader : UILabel = {
         let label = UILabel()
@@ -223,13 +277,15 @@ class DetailView : UIView {
         return label
     }()
     
-    let tableView : UITableView = {
-        let tableView  = UITableView()
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.rowHeight = UITableView.automaticDimension
-        return tableView
+    let watchMovieButton : UIButton = {
+        let button = UIButton()
+        button.configuration = .filled()
+        button.tintColor = .systemRed
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.configuration?.title = "Watch now"
+        button.configuration?.image = UIImage(systemName: "movieclapper")?.withRenderingMode(.alwaysOriginal)
+        return button
     }()
-    
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -243,16 +299,20 @@ class DetailView : UIView {
     
     func setupView(){
         addSubview(scrollView)
+        
         scrollView.addSubview(contentView)
         contentView.addSubview(movieImageView)
-        movieImageView.addSubview(playImageButton)
+        contentView.addSubview(webView)
+        movieImageView.addSubview(serverErrorLabel)
         
         contentView.addSubview(movieTitleLabel)
+        contentView.addSubview(downloadButton)
         contentView.addSubview(voteStackView)
         contentView.addSubview(movieVoteLabel)
         contentView.addSubview(movieOverViewLabel)
         contentView.addSubview(tableHeader)
-        contentView.addSubview(tableView)
+        contentView.addSubview(webView2)
+        contentView.addSubview(watchMovieButton)
         
         contentView.addSubview(verticalStackView)
         horizontalStackView1.addArrangedSubview(mediaType)
@@ -289,22 +349,33 @@ class DetailView : UIView {
             movieImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
             movieImageView.heightAnchor.constraint(equalToConstant: 500),
             
-            playImageButton.centerYAnchor.constraint(equalTo: movieImageView.centerYAnchor),
-            playImageButton.centerXAnchor.constraint(equalTo: movieImageView.centerXAnchor),
-            playImageButton.widthAnchor.constraint(equalToConstant: 100),
-            playImageButton.heightAnchor.constraint(equalToConstant: 100),
+            serverErrorLabel.bottomAnchor.constraint(equalTo: movieImageView.bottomAnchor,constant: -5),
+            serverErrorLabel.leadingAnchor.constraint(equalTo: movieImageView.leadingAnchor, constant: 10),
             
+            webView.topAnchor.constraint(equalTo: contentView.topAnchor,constant: 10),
+            webView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 10),
+            webView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+            webView.heightAnchor.constraint(equalToConstant: 500),
+        
             movieTitleLabel.topAnchor.constraint(equalTo: movieImageView.bottomAnchor,constant: 20),
-            movieTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
-            movieTitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+            movieTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            movieTitleLabel.trailingAnchor.constraint(equalTo: downloadButton.leadingAnchor, constant: -10),
             
-            movieVoteLabel.topAnchor.constraint(equalTo: movieTitleLabel.bottomAnchor, constant: 20),
+            watchMovieButton.topAnchor.constraint(equalTo: movieTitleLabel.bottomAnchor, constant: 10),
+            watchMovieButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            
+            downloadButton.topAnchor.constraint(equalTo: movieImageView.bottomAnchor, constant: 20),
+            downloadButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            downloadButton.widthAnchor.constraint(equalToConstant: 30),
+            downloadButton.heightAnchor.constraint(equalToConstant: 30),
+            
+            movieVoteLabel.topAnchor.constraint(equalTo: watchMovieButton.bottomAnchor, constant: 20),
             movieVoteLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
             movieVoteLabel.widthAnchor.constraint(equalToConstant: 200),
             movieVoteLabel.heightAnchor.constraint(equalToConstant: 30),
             
             
-            voteStackView.topAnchor.constraint(equalTo: movieTitleLabel.bottomAnchor, constant: 20),
+            voteStackView.topAnchor.constraint(equalTo: watchMovieButton.bottomAnchor, constant: 20),
             voteStackView.leadingAnchor.constraint(equalTo: movieVoteLabel.trailingAnchor, constant: 10),
             voteStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
             
@@ -321,14 +392,12 @@ class DetailView : UIView {
             tableHeader.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
             tableHeader.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
             
-            tableView.topAnchor.constraint(equalTo: tableHeader.bottomAnchor,constant: 10),
-            tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 10),
-            tableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -10),
-            tableView.heightAnchor.constraint(equalToConstant: 300),
-            tableView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            
+            webView2.topAnchor.constraint(equalTo: tableHeader.bottomAnchor, constant: 20),
+            webView2.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            webView2.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            webView2.bottomAnchor.constraint(equalTo: contentView.bottomAnchor,constant:50),
+            webView2.heightAnchor.constraint(equalToConstant: 700),
         ])
     }
-    
    
 }

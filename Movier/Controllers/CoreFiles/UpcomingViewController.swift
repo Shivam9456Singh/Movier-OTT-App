@@ -9,6 +9,9 @@ import UIKit
 
 class UpcomingViewController: UIViewController {
     private var titles: [Title] = [Title]()
+    private var detailViewModel : DetailViewModel?
+    
+    let upcomingDetailView = DetailView()
     
     private let upcomingTable: UITableView = {
         let table = UITableView()
@@ -20,8 +23,6 @@ class UpcomingViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         title = "Coming soon"
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationController?.navigationBar.topItem?.largeTitleDisplayMode = .always
         
         view.addSubview(upcomingTable)
         upcomingTable.delegate = self
@@ -72,17 +73,15 @@ extension UpcomingViewController: UITableViewDelegate, UITableViewDataSource{
         return cell
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 200
+        return UITableView.automaticDimension
     }
-}
-
-extension UpcomingViewController : TableViewCellDelegate {
     
-    func TableViewCellDidTapCell(_ cell: TitleTableViewCell, viewModel: DetailViewModel) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let detailVC = DetailViewController()
-        detailVC.configure(with: viewModel)
+        let title = titles[indexPath.row]
+        
+        let detailViewModel = DetailViewModel(id: title.id, contentType: title.media_type, movieName: title.original_name, movieTitle: title.original_title, movieImagePath: title.poster_path, movieOverview: title.overview, movieVoteCount: title.vote_count, movieReleaseDate: title.release_date, movieVoteAverage: title.vote_average, tvairDate: title.first_air_date, movieAdult: title.adult, movieLanguage: title.original_language)
+        detailVC.configure(with: detailViewModel)
         navigationController?.pushViewController(detailVC, animated: true)
     }
-    
-    
 }

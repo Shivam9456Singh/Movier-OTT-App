@@ -7,47 +7,72 @@
 
 import Foundation
 import UIKit
+import WebKit
+
 
 class DetailViewController : UIViewController {
     
     let detailView = DetailView()
     
     private var viewModel : DetailViewModel?
+    private var model : TitlePreviewViewModel?
+    
+    private let activityIndicator : UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.hidesWhenStopped = true
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.color = .systemRed
+        return indicator
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        detailView.webView.navigationDelegate = self
+        detailView.webView2.navigationDelegate = self
+        detailView.webView.uiDelegate = self
+        detailView.webView2.uiDelegate = self
         setupDetailView()
+        webVideoPreview()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        setupDetailView()
-    }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        detailView.tableView.dataSource = self
-        detailView.tableView.delegate = self
-        detailView.tableView.register(VideoTableCell.self, forCellReuseIdentifier: VideoTableCell.identifier)
-        detailView.tableView.showsVerticalScrollIndicator = false
-        detailView.tableView.layer.cornerRadius = 20
-        detailView.tableView.separatorStyle = .none
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        view.removeFromSuperview()
     }
     
     private func setupDetailView(){
         view.addSubview(detailView)
+        detailView.webView.addSubview(activityIndicator)
         detailView.translatesAutoresizingMaskIntoConstraints = false
-        
-        
         NSLayoutConstraint.activate([
             detailView.topAnchor.constraint(equalTo: view.topAnchor),
             detailView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             detailView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             detailView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            activityIndicator.centerXAnchor.constraint(equalTo: detailView.webView.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: detailView.webView.centerYAnchor),
         ])
+        
+        detailView.downloadButton.addTarget(self, action: #selector(downloadMovie), for: .touchUpInside)
+        detailView.watchMovieButton.addTarget(self, action: #selector(openWatchMovieController), for: .touchUpInside)
     }
     
-
+    @objc func openWatchMovieController(_ sender : UIButton){
+        let watchMovieVC = WatchMovieController()
+        watchMovieVC.configure(with: viewModel!)
+        navigationController?.pushViewController(watchMovieVC, animated: true)
+    }
+    
+    @objc func downloadMovie(_ sender : UIButton){
+        UIView.animate(withDuration: 1.0) {
+            sender.tintColor = .systemGreen
+            sender.setBackgroundImage(UIImage(systemName: "checkmark.square.fill"), for: .normal)
+        }
+    }
+    
     
     func configure(with viewModel : DetailViewModel){
         self.viewModel = viewModel
@@ -60,7 +85,7 @@ class DetailViewController : UIViewController {
         detailView.movieVoteLabel.text = "Total votes : " + String(viewModel.movieVoteCount)
         detailView.movieOverViewLabel.text = "\(viewModel.movieOverview ?? "Not Available")"
         detailView.mediaTypeValue.text = viewModel.contentType ?? "movie"
-        detailView.ratingsValue.text = String(viewModel.movieVoteAverage)
+        detailView.ratingsValue.text = "\(viewModel.movieVoteAverage) / 10"
         detailView.releaseDateValue.text = viewModel.movieReleaseDate ?? viewModel.tvairDate
         
         if  Int(viewModel.movieVoteCount) > 100 && Int(viewModel.movieVoteCount) <= 500 {
@@ -89,21 +114,69 @@ class DetailViewController : UIViewController {
     }
     
     
+    func webVideoPreview(){
+        guard let titleName = viewModel?.movieName ?? viewModel?.movieTitle else {return}
+        DispatchQueue.global(qos: .userInteractive).async {
+            APICaller.shared.getMovie(with: titleName + " trailer") {[weak self] results in
+                switch results{
+                case .success(let videoElement):
+                    let videoId = videoElement.id.videoId
+                    let youtubeURLString = "https://www.youtube.com/embed/\(videoId)?playsinline=1&autoplay=1"
+                    guard let url = URL(string: youtubeURLString) else {return}
+                    DispatchQueue.main.async {
+                        self?.detailView.webView.load(URLRequest(url: url))
+                    }
+                case .failure(_):
+                    DispatchQueue.main.sync {
+                        self?.detailView.webView.isHidden = true
+                        self?.detailView.movieImageView.isHidden = false
+                        self?.detailView.serverErrorLabel.isHidden = false
+                        self?.detailView.serverErrorLabel.text = "Server error in loading trailer."
+                    }
+                }
+            }
+        }
+        guard var contentType = viewModel?.contentType else {return}
+        if contentType == "tv" { contentType = "web series"}
+        guard let encodedTitle = titleName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://www.youtube.com/results?search_query=\(encodedTitle)+\(contentType)") else {return}
+        
+        DispatchQueue.global(qos: .userInteractive).async {
+            let request = URLRequest(url: url)
+            DispatchQueue.main.async {
+                self.detailView.webView2.load(request)
+            }
+        }
+    }
+    
+    
 }
 
-extension DetailViewController : UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10
+extension DetailViewController : WKNavigationDelegate, WKUIDelegate {
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        activityIndicator.startAnimating()
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: VideoTableCell.identifier) as? VideoTableCell else {return UITableViewCell()}
-        cell.selectionStyle = .none
-        return cell
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        activityIndicator.stopAnimating()
     }
     
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 150
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {
+        activityIndicator.stopAnimating()
+        print("Failed to load : \(error.localizedDescription)")
     }
     
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
+        decisionHandler(.allow)
+    }
+    
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        let fullScreenVC = FullScreenWebViewController()
+        fullScreenVC.modalPresentationStyle = .fullScreen
+        
+        fullScreenVC.loadWithConfiguration(configuration, navigationAction: navigationAction)
+        present(fullScreenVC, animated: true,completion: nil)
+        
+        return fullScreenVC.webView
+    }
 }

@@ -6,7 +6,9 @@
 //
 
 import Foundation
+
 struct DetailViewModel {
+    let id : Int
     let contentType: String?
     let movieName: String?
     let movieTitle: String?
@@ -16,5 +18,7 @@ struct DetailViewModel {
     let movieReleaseDate: String?
     let movieVoteAverage: Double
     let tvairDate : String?
+    let movieAdult : Bool?
+    let movieLanguage : String?
 }
 

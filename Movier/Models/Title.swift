@@ -22,4 +22,7 @@ struct Title: Codable {
     let release_date: String?
     let vote_average: Double
     let first_air_date: String?
+    let original_language : String?
+    let adult : Bool?
 }
+

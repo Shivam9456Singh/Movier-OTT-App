@@ -9,22 +9,25 @@ import UIKit
 
 class HeroHeaderUIView: UIView {
     
-    private let downloadButton: UIButton = {
+    public let downloadButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Download", for: .normal)
-        button.layer.borderColor = UIColor.white.cgColor
-        button.layer.borderWidth = 1
-        
+        button.configuration = .filled()
+        button.configuration?.baseBackgroundColor = .systemRed
+        button.configuration?.image = UIImage(systemName: "arrowshape.down.fill")?.withRenderingMode(.alwaysOriginal)
+        button.configuration?.title = "Download"
+        button.configuration?.imagePadding = 5
         button.translatesAutoresizingMaskIntoConstraints = false
         button.layer.cornerRadius = 10
          return button
     }()
     
-    private let playButton: UIButton = {
+    public let playButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Play", for: .normal)
-        button.layer.borderColor = UIColor.white.cgColor
-        button.layer.borderWidth = 1
+        button.configuration = .filled()
+        button.configuration?.baseBackgroundColor = .systemRed
+        button.configuration?.image = UIImage(systemName: "play.circle")?.withRenderingMode(.alwaysOriginal)
+        button.configuration?.title = "Play"
+        button.configuration?.imagePadding = 5
         button.translatesAutoresizingMaskIntoConstraints = false
         button.layer.cornerRadius = 10
         return button
@@ -33,10 +36,9 @@ class HeroHeaderUIView: UIView {
      let heroImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-         imageView.image = UIImage(named: "stree2")
         imageView.clipsToBounds = true
+         imageView.preferredImageDynamicRange = .high
         imageView.layer.cornerRadius = 10
-        imageView.clipsToBounds = true
         return imageView
     }()
 
@@ -48,17 +50,22 @@ class HeroHeaderUIView: UIView {
         applyConstraints()
     }
  
+    
+    public func configure(with model : TitleViewModel){
+        guard let url = URL(string: "https://image.tmdb.org/t/p/w500/\(model.posterURL)") else {
+            return
+        }
+        heroImageView.sd_setImage(with: url,completed: nil)
+    }
     private func applyConstraints(){
         let playButtonConstraints = [
-            playButton.leadingAnchor.constraint(equalTo: leadingAnchor,constant: 10),
             playButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
-            playButton.widthAnchor.constraint(equalToConstant: 100)
+            playButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
         ]
         
         let downloadButonConstraints = [
-            downloadButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -160),
+            downloadButton.leadingAnchor.constraint(equalTo: playButton.trailingAnchor, constant: 20),
             downloadButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
-            downloadButton.widthAnchor.constraint(equalToConstant: 100)
             
         ]
         NSLayoutConstraint.activate(playButtonConstraints)

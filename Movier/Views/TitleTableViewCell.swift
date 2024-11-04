@@ -18,23 +18,32 @@ class TitleTableViewCell: UITableViewCell {
     weak var delegate : TableViewCellDelegate?
     
     private let playTitleButton: UIButton = {
-        let button = UIButton(type: .system)
+        let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setImage(UIImage(systemName: "play.cirlce"), for: .normal)
+        button.setBackgroundImage(UIImage(systemName: "play.circle")?.withTintColor(.white,renderingMode: .alwaysOriginal), for: .normal)
+        button.clipsToBounds = true
         return button
+    }()
+    
+    private let containerView : UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.clipsToBounds = true
+        return view
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0
-        label.layer.masksToBounds = true
+        label.clipsToBounds = true
         return label
     }()
     
     private let titlesPosterUIImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
+        imageView.layer.cornerRadius = 20
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.clipsToBounds = true
         return imageView
@@ -43,36 +52,37 @@ class TitleTableViewCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier resuseIdentifier: String?){
         super.init(style: style, reuseIdentifier: resuseIdentifier)
-        contentView.addSubview(titlesPosterUIImageView)
-        contentView.addSubview(titleLabel)
-        contentView.addSubview(playTitleButton)
+        contentView.addSubview(containerView)
+        containerView.addSubview(titlesPosterUIImageView)
+        titlesPosterUIImageView.addSubview(playTitleButton)
+        containerView.addSubview(titleLabel)
         applyConstraints()
     }
     
     private func applyConstraints(){
-        let titlesPosterUIImageViewConstriants = [
-            titlesPosterUIImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 20),
-            titlesPosterUIImageView.topAnchor.constraint(equalTo: contentView.topAnchor,constant: 15),
-            titlesPosterUIImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
-            titlesPosterUIImageView.widthAnchor.constraint(equalToConstant: 100)
-        ]
         
-        let titleLabelConstraints = [
-            titleLabel.leadingAnchor.constraint(equalTo: titlesPosterUIImageView.trailingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
-        ]
-        
-        let playTitleButton = [
-            playTitleButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
-            playTitleButton.leadingAnchor.constraint(equalTo: titlesPosterUIImageView.trailingAnchor,constant: 10),
-            playTitleButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -20),
+        NSLayoutConstraint.activate([
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor,constant: 10),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor,constant: -10),
+            containerView.heightAnchor.constraint(equalToConstant: 300),
             
-        ]
+            titlesPosterUIImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor,constant: 10),
+            titlesPosterUIImageView.topAnchor.constraint(equalTo: containerView.topAnchor,constant: 20),
+            titlesPosterUIImageView.widthAnchor.constraint(equalToConstant: 180),
+            titlesPosterUIImageView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor,constant: -20),
         
-        NSLayoutConstraint.activate(titlesPosterUIImageViewConstriants)
-        NSLayoutConstraint.activate(titleLabelConstraints)
-        NSLayoutConstraint.activate(playTitleButton)
+            titleLabel.leadingAnchor.constraint(equalTo: titlesPosterUIImageView.trailingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10),
+            titleLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            
+            playTitleButton.centerXAnchor.constraint(equalTo: titlesPosterUIImageView.centerXAnchor),
+            playTitleButton.centerYAnchor.constraint(equalTo: titlesPosterUIImageView.centerYAnchor),
+            playTitleButton.widthAnchor.constraint(equalToConstant: 50),
+            playTitleButton.heightAnchor.constraint(equalToConstant: 50),
+        ])
+        
     }
     
     
