@@ -88,21 +88,21 @@ extension CollectionViewTableViewCell: UICollectionViewDelegate, UICollectionVie
         
         delegate?.collectionViewCellDidTapCell(self, viewModel: detailViewModel)
     }
-//    
-//    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPath: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
-//        let config = UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
-//            let downloadAction = UIAction(title: "Download", subtitle: "save to downloads", image: UIImage(systemName: "square.and.arrow.down")?.withTintColor(.red, renderingMode: .alwaysOriginal), identifier: nil, discoverabilityTitle: nil, state: .off) {[weak self] _ in
-//                self?.downloadTitleAt(indexPath: indexPath)
-//            }
-//            let playAction = UIAction(title: "Play now", subtitle: "watch this thriller", image: UIImage(systemName: "play.circle")?.withTintColor(.systemRed, renderingMode: .alwaysOriginal), identifier: nil, discoverabilityTitle: nil, state: .off) { _ in
-//                print("Play now")
-//            }
-//            let infoAction = UIAction(title: "Info", subtitle: "get movie details and more", image: UIImage(systemName: "info.circle")?.withTintColor(.white,renderingMode: .alwaysOriginal), identifier: nil, discoverabilityTitle: nil, state: .off) { _ in
-//                print("Play now")
-//            }
-//            return UIMenu(title: "" , image: nil, identifier: nil, options: .displayInline, children: [infoAction,playAction,downloadAction])
-//        }
-//        return config
-//    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPath: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
+        let config = UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            let downloadAction = UIAction(title: "Download", subtitle: "save to downloads", image: UIImage(systemName: "square.and.arrow.down")?.withTintColor(.red, renderingMode: .alwaysOriginal), identifier: nil, discoverabilityTitle: nil, state: .off) {[weak self] _ in
+                self?.downloadTitleAt(indexPath: indexPath)
+            }
+            let playAction = UIAction(title: "Play now", subtitle: "watch this thriller", image: UIImage(systemName: "play.circle")?.withTintColor(.systemRed, renderingMode: .alwaysOriginal), identifier: nil, discoverabilityTitle: nil, state: .off) { _ in
+                print("Play now")
+            }
+            let infoAction = UIAction(title: "Info", subtitle: "get movie details and more", image: UIImage(systemName: "info.circle")?.withTintColor(.white,renderingMode: .alwaysOriginal), identifier: nil, discoverabilityTitle: nil, state: .off) { _ in
+                print("Play now")
+            }
+            return UIMenu(title: "" , image: nil, identifier: nil, options: .displayInline, children: [infoAction,playAction,downloadAction])
+        }
+        return config
+    }
     
 }
